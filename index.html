@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Dancing+Script:wght@400;500;600;700&family=Pacifico&family=Righteous&family=Sacramento&family=Sevillana&display=swap" rel="stylesheet">
+    <title>New Year Wishes</title>
+</head>
+<body>
+    <canvas id="fireworks"></canvas>
+    <div>
+        <h1 class="neon">Happy New Year<br>2024!</h1>
+        <button onclick="showRandomMessage()">Reveal the Magic</button>
+      </div>
+    
+      <!-- Container for the message -->
+      <div id="messageContainer">
+        <p id="messageContent">This is the message inside the container.</p>
+        <!-- Add more content as needed -->
+      </div>
+      <script>
+        // Array of messages
+    var messages = [
+      "As the curtain falls on this year's act, may the sequel bring you a screenplay of dreams, with plot twists that lead to triumph and joy.!",
+      "As the screen of life transitions to a new chapter, may your story unfold with scenes of prosperity, love, and unforgettable adventures.!",
+      "May your life's soundtrack in the upcoming year be composed of symphonies of laughter, crescendos of success, and the sweet melodies of cherished moments.!",
+      "May the coming year be a canvas of beautiful moments, painted with laughter, shared with loved ones, and brushed with success. Happy New Year.!",
+      "May the tears of the past year be replaced with smiles, and the echoes of laughter reverberate through the corridors of your soul in the coming year.!",
+      "In the gentle embrace of the new year, may you find healing for wounds unseen, and may the echoes of kindness be the melody that soothes your heart.!"
+      // Add more messages as needed
+    ];
+
+    // JavaScript function to show a random message in the container
+    function showRandomMessage() {
+      var container = document.getElementById('messageContainer');
+      var messageContent = document.getElementById('messageContent');
+
+      // Get a random index from the messages array
+      var randomIndex = Math.floor(Math.random() * messages.length);
+
+      // Set the random message in the container
+      messageContent.innerText = messages[randomIndex];
+
+      // Display the container
+      container.style.display = 'block';
+    }
+
+    // Close the container when clicking outside of it
+    document.addEventListener('click', function (event) {
+      var container = document.getElementById('messageContainer');
+      var button = document.querySelector('button');
+      if (event.target !== container && event.target !== button && !container.contains(event.target)) {
+        container.style.display = 'none';
+      }
+    });
+
+    //Fireworks Simulator
+    const canvas = document.getElementById('fireworks');
+        const ctx = canvas.getContext('2d');
+        let lastFireworkTime = performance.now();
+        let fireworks = [];
+
+        function setCanvasSize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        setCanvasSize(); // Set initial canvas size
+
+        window.addEventListener('resize', setCanvasSize);
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: (Math.random() - 0.5) * 8
+                };
+                this.alpha = 1;
+                this.fadeSpeed = Math.random() * 0.01 + 0.005; // Random fade speed
+                this.friction = 0.99;
+                this.glow = Math.random() * 10 + 5; // Random glow value
+                this.birthTime = performance.now();
+            }
+
+            draw() {
+                ctx.globalAlpha = this.alpha;
+                ctx.shadowColor = this.color;
+                ctx.shadowBlur = this.glow;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 2, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            update() {
+                this.velocity.x *= this.friction;
+                this.velocity.y *= this.friction;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= this.fadeSpeed;
+
+                // Add sparkling effect
+                if (Math.random() < 0.1) {
+                    this.alpha = Math.random(); // Randomly adjust alpha for sparkling effect
+                }
+            }
+
+            isExpired() {
+                return performance.now() - this.birthTime > 3000; // Remove particle after 3 seconds
+            }
+        }
+
+        class Firework {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.velocity = { x: 0, y: -4 }; // Fixed upward velocity
+                this.particles = [];
+                this.lifespan = 180;
+                this.hasExploded = false;
+            }
+
+            draw() {
+                ctx.shadowBlur = 0; // Disable glow for bursts
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+
+            explode() {
+                for (let i = 0; i < 50; i++) {
+                    this.particles.push(new Particle(this.x, this.y, this.color));
+                }
+            }
+
+            update() {
+                this.lifespan--;
+
+                if (this.lifespan <= 0 && !this.hasExploded) {
+                    this.explode();
+                    this.velocity = { x: 0, y: 0 };
+                    this.hasExploded = true;
+                } else if (this.lifespan > 0) {
+                    this.y += this.velocity.y;
+                }
+
+                for (let i = 0; i < this.particles.length; i++) {
+                    this.particles[i].update();
+                    this.particles[i].draw();
+                }
+
+                this.particles = this.particles.filter(p => !p.isExpired());
+            }
+        }
+
+        function createFirework() {
+    const x = Math.random() * canvas.width;
+    const y = canvas.height - Math.random() * -500; // Adjust this value as needed
+
+    const color = `hsl(${Math.random() * 360}, 50%, 80%)`; // Lighter color for bursts
+
+    fireworks.push(new Firework(x, y, color));
+}
+
+function animate() {
+    requestAnimationFrame(animate);
+
+    // Clear the entire canvas on each frame
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    fireworks.forEach((firework, index) => {
+        firework.update();
+        firework.draw();
+
+        if (firework.lifespan <= 0 && firework.particles.every(p => p.alpha <= 0)) {
+            fireworks.splice(index, 1);
+        }
+    });
+
+    const currentTime = performance.now();
+    if (currentTime - lastFireworkTime > 400) {
+        createFirework();
+        lastFireworkTime = currentTime;
+    }
+}
+
+animate();
+      </script>
+</body>
+</html>
